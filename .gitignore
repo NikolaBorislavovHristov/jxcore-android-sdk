@@ -1,1 +1,6 @@
 /.gradle
+/build
+/.externalNativeBuild
+/.idea
+*.iml
+/local.properties
