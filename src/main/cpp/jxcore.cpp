@@ -1,6 +1,8 @@
 #include <jni.h>
 #include <string>
 #include <android/log.h>
+#include "android/asset_manager.h"
+#include "android/asset_manager_jni.h"
 
 #define LOG_TAG "JXCore"
 #define LOGD(...) __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, __VA_ARGS__)
@@ -18,6 +20,7 @@ static pthread_key_t sKey;
 static JavaVM *sJavaVm = NULL;
 static jobject sClassloader;
 static JNIMethodInfo sLoadClassMethodInfo;
+static AAssetManager *sAssetManager;
 
 jint JNI_OnLoad(JavaVM *javaVM, void *reserved) {
     LOGD("JNI_OnLoad");
@@ -85,10 +88,15 @@ Java_io_jxcore_node_JXCore_setNativeContext(JNIEnv *env, jobject thiz, jobject c
     ::getMethodInfo(getClassLoaderMethodInfo, "android/content/Context", "getClassLoader", "()Ljava/lang/ClassLoader;");
     jobject classLoader = env->CallObjectMethod(context, getClassLoaderMethodInfo.methodID);
     ::sClassloader = env->NewGlobalRef(classLoader);
-    
+
     JNIMethodInfo loadClassMethodInfo;
     ::getMethodInfo(loadClassMethodInfo, "java/lang/ClassLoader", "loadClass", "(Ljava/lang/String;)Ljava/lang/Class;");
     ::sLoadClassMethodInfo = loadClassMethodInfo;
+
+    JNIMethodInfo getAssetsMethodInfo;
+    ::getMethodInfo(getAssetsMethodInfo, "android/content/Context", "getAssets", "()Landroid/content/res/AssetManager;");
+    jobject assetManager = env->CallObjectMethod(context, getAssetsMethodInfo.methodID);
+    sAssetManager = AAssetManager_fromJava(env, assetManager);
 }
 
 }
