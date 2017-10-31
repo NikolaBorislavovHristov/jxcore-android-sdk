@@ -12,12 +12,12 @@ static const jint JAVA_VERSION = JNI_VERSION_1_4;
 typedef struct {
     jclass clazz;
     jmethodID methodID;
-} JniMethodInfo;
+} JNIMethodInfo;
 
 static pthread_key_t sKey;
 static JavaVM *sJavaVm = NULL;
 static jobject sClassloader;
-static JniMethodInfo sLoadClassMethodInfo;
+static JNIMethodInfo sLoadClassMethodInfo;
 
 jint JNI_OnLoad(JavaVM *javaVM, void *reserved) {
     LOGD("JNI_OnLoad");
@@ -52,7 +52,7 @@ JNIEnv *getEnv() {
     return env;
 }
 
-bool getMethodInfo(JniMethodInfo &methodInfo, const char *className, const char *methodName, const char *methodSignature) {
+bool getMethodInfo(JNIMethodInfo &methodInfo, const char *className, const char *methodName, const char *methodSignature) {
     if (className == NULL || methodName == NULL || methodSignature == NULL) {
         return false;
     }
@@ -81,12 +81,12 @@ bool getMethodInfo(JniMethodInfo &methodInfo, const char *className, const char 
 
 JNIEXPORT void JNICALL
 Java_io_jxcore_node_JXCore_setNativeContext(JNIEnv *env, jobject thiz, jobject context) {
-    JniMethodInfo getClassLoaderMethodInfo;
+    JNIMethodInfo getClassLoaderMethodInfo;
     ::getMethodInfo(getClassLoaderMethodInfo, "android/content/Context", "getClassLoader", "()Ljava/lang/ClassLoader;");
     jobject classLoader = env->CallObjectMethod(context, getClassLoaderMethodInfo.methodID);
     ::sClassloader = env->NewGlobalRef(classLoader);
-
-    JniMethodInfo loadClassMethodInfo;
+    
+    JNIMethodInfo loadClassMethodInfo;
     ::getMethodInfo(loadClassMethodInfo, "java/lang/ClassLoader", "loadClass", "(Ljava/lang/String;)Ljava/lang/Class;");
     ::sLoadClassMethodInfo = loadClassMethodInfo;
 }
