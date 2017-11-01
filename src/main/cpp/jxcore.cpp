@@ -96,7 +96,7 @@ Java_io_jxcore_node_JXCore_setNativeContext(JNIEnv *env, jobject thiz, jobject c
     JNIMethodInfo getAssetsMethodInfo;
     ::getMethodInfo(getAssetsMethodInfo, "android/content/Context", "getAssets", "()Landroid/content/res/AssetManager;");
     jobject assetManager = env->CallObjectMethod(context, getAssetsMethodInfo.methodID);
-    sAssetManager = AAssetManager_fromJava(env, assetManager);
+    ::sAssetManager = AAssetManager_fromJava(env, assetManager);
 }
 
 }
