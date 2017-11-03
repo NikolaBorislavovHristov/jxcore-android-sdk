@@ -9,9 +9,11 @@ public final class JXCore {
     }
 
     private final Context mContext;
+    private final String mMainFileName;
 
-    public JXCore(final Context context) {
+    public JXCore(final Context context, final String mainFileName) {
         mContext = context;
+        mMainFileName = mainFileName;
         setNativeContext(mContext);
     }
 
