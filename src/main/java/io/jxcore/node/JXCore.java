@@ -21,6 +21,7 @@ public final class JXCore {
         System.loadLibrary("jxcore");
     }
 
+    private boolean mIsRunning;
     private final Handler mEventLoopHandler;
     private final Runnable mEventLoop = new Runnable() {
         @Override
@@ -31,6 +32,7 @@ public final class JXCore {
     };
 
     public JXCore(final Context context, final String assetsPath, final String mainFileName) throws IOException {
+        mIsRunning = false;
         mEventLoopHandler = new Handler(context.getMainLooper());
         final AssetManager assetManager = context.getAssets();
         final HashMap assetsFilesTree = getAssetsFilesTree(assetManager, assetsPath);
@@ -44,12 +46,30 @@ public final class JXCore {
 
     public void start() {
         startEngine();
-        mEventLoopHandler.post(mEventLoop);
+        resume();
     }
 
     public void stop() {
-        mEventLoopHandler.removeCallbacks(mEventLoop);
+        pause();
         stopEngine();
+    }
+
+    public void resume() {
+        synchronized (this) {
+            if (!mIsRunning) {
+                mIsRunning = true;
+                mEventLoopHandler.post(mEventLoop);
+            }
+        }
+    }
+
+    public void pause() {
+        synchronized (this) {
+            if (mIsRunning) {
+                mIsRunning = false;
+                mEventLoopHandler.removeCallbacks(mEventLoop);
+            }
+        }
     }
 
     private HashMap<String, Integer> getAssetsFilesTree(final AssetManager assetManager, final String assetsPath) throws IOException {
@@ -87,5 +107,4 @@ public final class JXCore {
     private native void startEngine();
 
     private native void loopOnce();
-
 }
