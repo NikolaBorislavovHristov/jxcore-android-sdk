@@ -18,7 +18,8 @@ public final class JXCore {
     private static final String TAG = JXCore.class.getSimpleName();
     private static final int EVENT_LOOP_TIMEOUT = 5;
     private static final String ASSETS_PATH = "www/jxcore";
-    private static final String MAIN_FILE_FORMAT = "var HOME_PATH = '%s', ASSETS_PATH = '%s';\n%s";
+    private static final String INDEX_FILE = "jxcoreIndex.js";
+    private static final String MAIN_FILE_FORMAT = "var HOME_PATH = '%s', ASSETS_PATH = '%s', MAIN_FILE = '%s';\n%s";
 
     static {
         System.loadLibrary("jxcore");
@@ -42,12 +43,12 @@ public final class JXCore {
         final HashMap assetsFilesTree = getAssetsFilesTree(assetManager, ASSETS_PATH);
         final String assetsAsString = new JSONObject(assetsFilesTree).toString();
         final String homePath = context.getFilesDir().getAbsolutePath();
-        final String mainFileAsset = readAsset(assetManager, ASSETS_PATH + "/" + mainFileName);
-        final String mainFileContent = String.format(MAIN_FILE_FORMAT, homePath, ASSETS_PATH, mainFileAsset);
+        final String assetsAbsolutePath = homePath + '/' + ASSETS_PATH;
+        final String indexFileContent = readAsset(assetManager, ASSETS_PATH + "/" + INDEX_FILE);
+        final String mainFileContent = String.format(MAIN_FILE_FORMAT, homePath, ASSETS_PATH, mainFileName, indexFileContent);
         mEventLoopHandler.post(new Runnable() {
             @Override
             public void run() {
-                final String assetsAbsolutePath = homePath + '/' + ASSETS_PATH;
                 JXCore.this.initializeEngine(assetManager, assetsAbsolutePath, assetsAsString, mainFileContent);
             }
         });
