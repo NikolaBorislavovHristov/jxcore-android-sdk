@@ -14,6 +14,8 @@ import java.util.HashMap;
 
 public final class JXCore {
 
+    private static final int EVENT_LOOP_TIMEOUT = 5;
+
     static {
         System.loadLibrary("jxcore");
     }
@@ -61,11 +63,11 @@ public final class JXCore {
             @Override
             public void run() {
                 JXCore.this.loopOnce();
-                mLoopHandler.postDelayed(this, 5);
+                mLoopHandler.postDelayed(this, EVENT_LOOP_TIMEOUT);
             }
         };
 
-        mLoopHandler.postDelayed(eventLoop, 5);
+        mLoopHandler.postDelayed(eventLoop, EVENT_LOOP_TIMEOUT);
     }
 
     private HashMap<String, Integer> getAssetsFilesTree() throws IOException {
