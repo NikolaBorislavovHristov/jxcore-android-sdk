@@ -33,7 +33,7 @@ public final class JXCore {
     }
 
     public void start() throws Exception {
-        final HashMap assets = getAssets();
+        final HashMap assets = getAssetsFilesTree();
         final String assetsAsString = new JSONObject(assets).toString();
         final String assetsAbsolutePath = mHomePath + '/' + mAssetsPath;
         initializeEngine(mAssetManager, assetsAbsolutePath, assetsAsString);
@@ -68,17 +68,17 @@ public final class JXCore {
         mLoopHandler.postDelayed(eventLoop, 5);
     }
 
-    private HashMap<String, Integer> getAssets() throws IOException {
-        final HashMap<String, Integer> assets = new HashMap<>();
+    private HashMap<String, Integer> getAssetsFilesTree() throws IOException {
+        final HashMap<String, Integer> filesTree = new HashMap<>();
         final String[] assetFilePaths = mAssetManager.list(mAssetsPath);
-        for(final String filePath : assetFilePaths) {
-            final InputStream assetInputStream = mAssetManager.open(mAssetsPath + '/' + filePath, AssetManager.ACCESS_UNKNOWN);
+        for (final String filePath : assetFilePaths) {
+            final InputStream assetInputStream = mAssetManager.open(mAssetsPath + "/" + filePath, AssetManager.ACCESS_UNKNOWN);
             final int size = assetInputStream.available();
+            filesTree.put(filePath, size);
             assetInputStream.close();
-            assets.put(filePath, size);
         }
 
-        return assets;
+        return filesTree;
     }
 
     private String readAsset(final String fileName) throws IOException {
