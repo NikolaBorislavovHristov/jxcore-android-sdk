@@ -34,9 +34,9 @@ public final class JXCore {
     };
 
     public JXCore(final Context context, final String assetsPath, final String mainFileName) throws IOException {
-        final HandlerThread handlerThread = new HandlerThread(TAG);
-        handlerThread.start();
-        mEventLoopHandler = new Handler(handlerThread.getLooper());
+        final HandlerThread eventLoopThread = new HandlerThread(TAG);
+        eventLoopThread.start();
+        mEventLoopHandler = new Handler(eventLoopThread.getLooper());
         final AssetManager assetManager = context.getAssets();
         final HashMap assetsFilesTree = getAssetsFilesTree(assetManager, assetsPath);
         final String assetsAsString = new JSONObject(assetsFilesTree).toString();
