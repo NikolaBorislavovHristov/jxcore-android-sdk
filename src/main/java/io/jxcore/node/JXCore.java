@@ -60,15 +60,11 @@ public final class JXCore {
 
     public void start() {
         startEngine();
-        startEventLoop();
+        mLoopHandler.post(mEventLoop);
     }
 
     public void stop() {
         stopEngine();
-    }
-
-    private void startEventLoop() {
-        mLoopHandler.post(mEventLoop);
     }
 
     private HashMap<String, Integer> getAssetsFilesTree() throws IOException {
