@@ -17,7 +17,7 @@ public final class JXCore {
 
     private static final String TAG = JXCore.class.getSimpleName();
     private static final int EVENT_LOOP_TIMEOUT = 5;
-    private static final String MAIN_FILE_FORMAT = "var CWD = '%s', USER_PATH = '%s';\n%s";
+    private static final String MAIN_FILE_FORMAT = "var HOME_PATH = '%s', ASSETS_PATH = '%s';\n%s";
 
     static {
         System.loadLibrary("jxcore");
@@ -41,12 +41,12 @@ public final class JXCore {
         final HashMap assetsFilesTree = getAssetsFilesTree(assetManager, assetsPath);
         final String assetsAsString = new JSONObject(assetsFilesTree).toString();
         final String homePath = context.getFilesDir().getAbsolutePath();
-        final String assetsAbsolutePath = homePath + '/' + assetsPath;
         final String mainFileAsset = readAsset(assetManager, assetsPath + "/" + mainFileName);
-        final String mainFileContent = String.format(MAIN_FILE_FORMAT, assetsAbsolutePath, homePath, mainFileAsset);
+        final String mainFileContent = String.format(MAIN_FILE_FORMAT, homePath, assetsPath, mainFileAsset);
         mEventLoopHandler.post(new Runnable() {
             @Override
             public void run() {
+                final String assetsAbsolutePath = homePath + '/' + assetsPath;
                 JXCore.this.initializeEngine(assetManager, assetsAbsolutePath, assetsAsString, mainFileContent);
             }
         });
