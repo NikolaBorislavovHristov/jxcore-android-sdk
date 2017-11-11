@@ -47,9 +47,10 @@ void assetReadDirSync(JXValue *argv, int argc) {
 }
 
 JNIEXPORT void JNICALL
-Java_io_jxcore_node_JXCore_initializeEngine(JNIEnv *env, jobject thiz, jobject assetManager_, jstring assetsPath_, jstring assetsFilesTree_) {
+Java_io_jxcore_node_JXCore_initializeEngine(JNIEnv *env, jobject thiz, jobject assetManager_, jstring assetsPath_, jstring assetsFilesTree_, jstring mainFileContent_) {
     const char *assetsPath = env->GetStringUTFChars(assetsPath_, 0);
     const char *assetsFilesTree = env->GetStringUTFChars(assetsFilesTree_, 0);
+    const char *mainFileContent = env->GetStringUTFChars(mainFileContent_, 0);
 
     mAssetsFilesTree = assetsFilesTree;
     mAssetManager = AAssetManager_fromJava(env, assetManager_);
@@ -59,7 +60,8 @@ Java_io_jxcore_node_JXCore_initializeEngine(JNIEnv *env, jobject thiz, jobject a
     JX_DefineExtension("assetExistsSync", assetExistsSync);
     JX_DefineExtension("assetReadSync", assetReadSync);
     JX_DefineExtension("assetReadDirSync", assetReadDirSync);
-
+    JX_DefineMainFile(mainFileContent);
+    
     if (JX_IsSpiderMonkey()) {
         LOGD("Engine initialized with spidermonkey");
     } else if (JX_IsV8()) {
@@ -68,6 +70,7 @@ Java_io_jxcore_node_JXCore_initializeEngine(JNIEnv *env, jobject thiz, jobject a
 
     env->ReleaseStringUTFChars(assetsPath_, assetsPath);
     env->ReleaseStringUTFChars(assetsFilesTree_, assetsFilesTree);
+    env->ReleaseStringUTFChars(mainFileContent_, mainFileContent);
 }
 
 JNIEXPORT void JNICALL
@@ -78,13 +81,6 @@ Java_io_jxcore_node_JXCore_stopEngine(JNIEnv *env, jobject thiz) {
 JNIEXPORT void JNICALL
 Java_io_jxcore_node_JXCore_startEngine(JNIEnv *env, jobject thiz) {
     JX_StartEngine();
-}
-
-JNIEXPORT void JNICALL
-Java_io_jxcore_node_JXCore_defineMainFile(JNIEnv *env, jobject thiz, jstring mainFileContent_) {
-    const char *mainFileContent = env->GetStringUTFChars(mainFileContent_, 0);
-    JX_DefineMainFile(mainFileContent);
-    env->ReleaseStringUTFChars(mainFileContent_, mainFileContent);
 }
 
 JNIEXPORT void JNICALL

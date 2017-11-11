@@ -21,10 +21,6 @@ public final class JXCore {
         System.loadLibrary("jxcore");
     }
 
-    private final AssetManager mAssetManager;
-    private final String mHomePath;
-    private final String mAssetsPath;
-    private final String mMainFileName;
     private final Handler mEventLoopHandler;
     private final Runnable mEventLoop = new Runnable() {
         @Override
@@ -34,21 +30,16 @@ public final class JXCore {
         }
     };
 
-    public JXCore(final Context context, final String assetsPath, final String mainFileName) {
-        mAssetManager = context.getAssets();
-        mHomePath = context.getFilesDir().getAbsolutePath();
-        mAssetsPath = assetsPath;
-        mMainFileName = mainFileName;
+    public JXCore(final Context context, final String assetsPath, final String mainFileName) throws IOException {
         mEventLoopHandler = new Handler(context.getMainLooper());
-    }
-
-    public void initialize() throws IOException {
-        final HashMap assetsFilesTree = getAssetsFilesTree();
+        final AssetManager assetManager = context.getAssets();
+        final HashMap assetsFilesTree = getAssetsFilesTree(assetManager, assetsPath);
         final String assetsAsString = new JSONObject(assetsFilesTree).toString();
-        final String assetsAbsolutePath = mHomePath + '/' + mAssetsPath;
-        initializeEngine(mAssetManager, assetsAbsolutePath, assetsAsString);
-        final String mainFileContent = String.format(MAIN_FILE_FORMAT, assetsAbsolutePath, mHomePath, readAsset(mMainFileName));
-        defineMainFile(mainFileContent);
+        final String homePath = context.getFilesDir().getAbsolutePath();
+        final String assetsAbsolutePath = homePath + '/' + assetsPath;
+        final String mainFileAsset = readAsset(assetManager, assetsPath + "/" + mainFileName);
+        final String mainFileContent = String.format(MAIN_FILE_FORMAT, assetsAbsolutePath, homePath, mainFileAsset);
+        initializeEngine(assetManager, assetsAbsolutePath, assetsAsString, mainFileContent);
     }
 
     public void start() {
@@ -57,15 +48,15 @@ public final class JXCore {
     }
 
     public void stop() {
-        stopEngine();
         mEventLoopHandler.removeCallbacks(mEventLoop);
+        stopEngine();
     }
 
-    private HashMap<String, Integer> getAssetsFilesTree() throws IOException {
+    private HashMap<String, Integer> getAssetsFilesTree(final AssetManager assetManager, final String assetsPath) throws IOException {
         final HashMap<String, Integer> filesTree = new HashMap<>();
-        final String[] assetFilePaths = mAssetManager.list(mAssetsPath);
+        final String[] assetFilePaths = assetManager.list(assetsPath);
         for (final String filePath : assetFilePaths) {
-            final InputStream assetInputStream = mAssetManager.open(mAssetsPath + "/" + filePath, AssetManager.ACCESS_UNKNOWN);
+            final InputStream assetInputStream = assetManager.open(assetsPath + "/" + filePath, AssetManager.ACCESS_UNKNOWN);
             final int size = assetInputStream.available();
             filesTree.put(filePath, size);
             assetInputStream.close();
@@ -74,10 +65,10 @@ public final class JXCore {
         return filesTree;
     }
 
-    private String readAsset(final String fileName) throws IOException {
+    private String readAsset(final AssetManager assetManager, final String filePath) throws IOException {
         final StringBuilder content = new StringBuilder();
         final BufferedReader assetReader = new BufferedReader(
-                new InputStreamReader(mAssetManager.open(mAssetsPath + "/" + fileName), "UTF-8")
+                new InputStreamReader(assetManager.open(filePath), "UTF-8")
         );
 
         String line;
@@ -89,9 +80,7 @@ public final class JXCore {
         return content.toString();
     }
 
-    private native void initializeEngine(final AssetManager assetManager, final String assetsPath, final String assetsFilesTree);
-
-    private native void defineMainFile(final String mainFileContent);
+    private native void initializeEngine(final AssetManager assetManager, final String assetsPath, final String assetsFilesTree, final String mainFileContent);
 
     private native void stopEngine();
 
