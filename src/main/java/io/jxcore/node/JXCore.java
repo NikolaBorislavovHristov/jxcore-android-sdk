@@ -27,13 +27,11 @@ public final class JXCore {
     private final String mMainFileName;
     private final Handler mEventLoopHandler;
     private final Runnable mEventLoop = new Runnable() {
-
         @Override
         public void run() {
             JXCore.this.loopOnce();
-            mEventLoopHandler.postDelayed(this, EVENT_LOOP_TIMEOUT);
+            mEventLoopHandler.postDelayed(mEventLoop, EVENT_LOOP_TIMEOUT);
         }
-
     };
 
     public JXCore(final Context context, final String assetsPath, final String mainFileName) {
