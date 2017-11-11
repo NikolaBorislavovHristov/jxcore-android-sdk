@@ -10,12 +10,12 @@
 
 extern "C" {
 
-static AAssetManager *sAssetManager;
-static std::string sAssetsFilesTree;
+AAssetManager *mAssetManager;
+std::string mAssetsFilesTree;
 
 void assetExistsSync(JXValue *results, int argc) {
     char *filename = JX_GetString(&results[0]);
-    AAsset *asset = AAssetManager_open(sAssetManager, filename, AASSET_MODE_UNKNOWN);
+    AAsset *asset = AAssetManager_open(mAssetManager, filename, AASSET_MODE_UNKNOWN);
     bool found = asset != NULL;
     if (found) {
         AAsset_close(asset);
@@ -27,7 +27,7 @@ void assetExistsSync(JXValue *results, int argc) {
 
 void assetReadSync(JXValue *results, int argc) {
     char *filename = JX_GetString(&results[0]);
-    AAsset *asset = AAssetManager_open(sAssetManager, filename, AASSET_MODE_UNKNOWN);
+    AAsset *asset = AAssetManager_open(mAssetManager, filename, AASSET_MODE_UNKNOWN);
     if (asset == NULL) {
         const char *err = "File does not exist";
         JX_SetError(&results[argc], err, strlen(err));
@@ -44,7 +44,7 @@ void assetReadSync(JXValue *results, int argc) {
 }
 
 void assetReadDirSync(JXValue *results, int argc) {
-    JX_SetJSON(&results[argc], sAssetsFilesTree.c_str(), sAssetsFilesTree.length());
+    JX_SetJSON(&results[argc], mAssetsFilesTree.c_str(), mAssetsFilesTree.length());
 }
 
 JNIEXPORT void JNICALL
@@ -52,8 +52,8 @@ Java_io_jxcore_node_JXCore_initializeEngine(JNIEnv *env, jobject thiz, jobject a
     const char *assetsPath = env->GetStringUTFChars(assetsPath_, 0);
     const char *assetsFilesTree = env->GetStringUTFChars(assetsFilesTree_, 0);
 
-    sAssetsFilesTree = assetsFilesTree;
-    sAssetManager = AAssetManager_fromJava(env, assetManager_);
+    mAssetsFilesTree = assetsFilesTree;
+    mAssetManager = AAssetManager_fromJava(env, assetManager_);
 
     JX_InitializeOnce(assetsPath);
     JX_InitializeNewEngine();
