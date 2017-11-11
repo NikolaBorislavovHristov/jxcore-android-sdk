@@ -15,6 +15,7 @@ import java.util.HashMap;
 public final class JXCore {
 
     private static final int EVENT_LOOP_TIMEOUT = 5;
+    private static final String MAIN_FILE_FORMAT = "var CWD = '%s', USER_PATH = '%s';\n%s";
 
     static {
         System.loadLibrary("jxcore");
@@ -48,13 +49,7 @@ public final class JXCore {
         final String assetsAsString = new JSONObject(assetsFilesTree).toString();
         final String assetsAbsolutePath = mHomePath + '/' + mAssetsPath;
         initializeEngine(mAssetManager, assetsAbsolutePath, assetsAsString);
-        final String mainFileContent = "process.setPaths = function(){ process.cwd = function() { return '"
-                + assetsAbsolutePath
-                + "';};\n"
-                + "process.userPath ='"
-                + mHomePath
-                + "';\n"
-                + "};" + readAsset(mMainFileName);
+        final String mainFileContent = String.format(MAIN_FILE_FORMAT, assetsAbsolutePath, mHomePath, readAsset(mMainFileName));
         defineMainFile(mainFileContent);
     }
 
