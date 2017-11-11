@@ -3,100 +3,94 @@
 #include <android/log.h>
 #include "android/asset_manager.h"
 #include "android/asset_manager_jni.h"
+#include "../../../jxcore-binaries/jx.h"
 
 #define LOG_TAG "JXCore"
 #define LOGD(...) __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, __VA_ARGS__)
 
 extern "C" {
 
-static const jint JAVA_VERSION = JNI_VERSION_1_4;
-
-typedef struct {
-    jclass clazz;
-    jmethodID methodID;
-} JNIMethodInfo;
-
-static pthread_key_t sKey;
-static JavaVM *sJavaVm = NULL;
-static jobject sClassloader;
-static JNIMethodInfo sLoadClassMethodInfo;
 static AAssetManager *sAssetManager;
+static std::string sAssetsFilesTree;
 
-jint JNI_OnLoad(JavaVM *javaVM, void *reserved) {
-    LOGD("JNI_OnLoad");
-    sJavaVm = javaVM;
-    return JAVA_VERSION;
+void assetExistsSync(JXValue *results, int argc) {
+    char *filename = JX_GetString(&results[0]);
+    AAsset *asset = AAssetManager_open(sAssetManager, filename, AASSET_MODE_UNKNOWN);
+    bool found = asset != NULL;
+    if (found) {
+        AAsset_close(asset);
+    }
+
+    JX_SetBoolean(&results[argc], found);
+    free(filename);
 }
 
-JNIEnv *getEnv() {
-    JNIEnv *env = (JNIEnv *) pthread_getspecific(sKey);
-    if (env == NULL) {
-        jint result = sJavaVm->GetEnv(reinterpret_cast<void**>(&env), JAVA_VERSION);
-        switch (result) {
-            case JNI_OK:
-                pthread_setspecific(sKey, env);
-                break;
-            case JNI_EDETACHED:
-                if (sJavaVm->AttachCurrentThread(&env, NULL) < 0) {
-                    LOGD("Failed to get the environment. Unable to attach thread.");
-                } else {
-                    pthread_setspecific(sKey, env);
-                }
-                break;
-            case JNI_EVERSION:
-                LOGD("Failed to get the environment. JAVA version 1.4 not supported.");
-                break;
-            default:
-                LOGD("Failed to get the environment");
-                break;
-        }
+void assetReadSync(JXValue *results, int argc) {
+    char *filename = JX_GetString(&results[0]);
+    AAsset *asset = AAssetManager_open(sAssetManager, filename, AASSET_MODE_UNKNOWN);
+    if (asset == NULL) {
+        const char *err = "File does not exist";
+        JX_SetError(&results[argc], err, strlen(err));
+    } else {
+        off_t assetSize = AAsset_getLength(asset);
+        char *assetBuffer = (char*) malloc(sizeof(char)*assetSize);
+        int readLength = AAsset_read(asset, assetBuffer, assetSize);
+        JX_SetBuffer(&results[argc], assetBuffer, readLength);
+        AAsset_close(asset);
+        free(assetBuffer);
     }
 
-    return env;
+    free(filename);
 }
 
-bool getMethodInfo(JNIMethodInfo &methodInfo, const char *className, const char *methodName, const char *methodSignature) {
-    if (className == NULL || methodName == NULL || methodSignature == NULL) {
-        return false;
-    }
-
-    JNIEnv *env = ::getEnv();
-    if (env == NULL) {
-        return false;
-    }
-
-    jclass clazz = env->FindClass(className);
-    if (clazz == NULL) {
-        LOGD("Failed to find class %s", className);
-        return false;
-    }
-
-    jmethodID methodID = env->GetMethodID(clazz, methodName, methodSignature);
-    if (methodID == NULL) {
-        LOGD("Failed to find method id of %s", methodName);
-        return false;
-    }
-
-    methodInfo.clazz = clazz;
-    methodInfo.methodID = methodID;
-    return true;
+void assetReadDirSync(JXValue *results, int argc) {
+    JX_SetJSON(&results[argc], sAssetsFilesTree.c_str(), sAssetsFilesTree.length());
 }
 
 JNIEXPORT void JNICALL
-Java_io_jxcore_node_JXCore_setNativeContext(JNIEnv *env, jobject thiz, jobject context) {
-    JNIMethodInfo getClassLoaderMethodInfo;
-    ::getMethodInfo(getClassLoaderMethodInfo, "android/content/Context", "getClassLoader", "()Ljava/lang/ClassLoader;");
-    jobject classLoader = env->CallObjectMethod(context, getClassLoaderMethodInfo.methodID);
-    ::sClassloader = env->NewGlobalRef(classLoader);
+Java_io_jxcore_node_JXCore_initializeEngine(JNIEnv *env, jobject thiz, jobject assetManager_, jstring assetsPath_, jstring assetsFilesTree_) {
+    const char *assetsPath = env->GetStringUTFChars(assetsPath_, 0);
+    const char *assetsFilesTree = env->GetStringUTFChars(assetsFilesTree_, 0);
 
-    JNIMethodInfo loadClassMethodInfo;
-    ::getMethodInfo(loadClassMethodInfo, "java/lang/ClassLoader", "loadClass", "(Ljava/lang/String;)Ljava/lang/Class;");
-    ::sLoadClassMethodInfo = loadClassMethodInfo;
+    sAssetsFilesTree = assetsFilesTree;
+    sAssetManager = AAssetManager_fromJava(env, assetManager_);
 
-    JNIMethodInfo getAssetsMethodInfo;
-    ::getMethodInfo(getAssetsMethodInfo, "android/content/Context", "getAssets", "()Landroid/content/res/AssetManager;");
-    jobject assetManager = env->CallObjectMethod(context, getAssetsMethodInfo.methodID);
-    ::sAssetManager = AAssetManager_fromJava(env, assetManager);
+    JX_InitializeOnce(assetsPath);
+    JX_InitializeNewEngine();
+    JX_DefineExtension("assetExistsSync", assetExistsSync);
+    JX_DefineExtension("assetReadSync", assetReadSync);
+    JX_DefineExtension("assetReadDirSync", assetReadDirSync);
+
+    if (JX_IsSpiderMonkey()) {
+        LOGD("Engine initialized with spidermonkey");
+    } else if (JX_IsV8()) {
+        LOGD("Engine initialized with v8");
+    }
+
+    env->ReleaseStringUTFChars(assetsPath_, assetsPath);
+    env->ReleaseStringUTFChars(assetsFilesTree_, assetsFilesTree);
+}
+
+JNIEXPORT void JNICALL
+Java_io_jxcore_node_JXCore_stopEngine(JNIEnv *env, jobject thiz) {
+    JX_StopEngine();
+}
+
+JNIEXPORT void JNICALL
+Java_io_jxcore_node_JXCore_startEngine(JNIEnv *env, jobject thiz) {
+    JX_StartEngine();
+}
+
+JNIEXPORT void JNICALL
+Java_io_jxcore_node_JXCore_defineMainFile(JNIEnv *env, jobject thiz, jstring mainFileContent_) {
+    const char *mainFileContent = env->GetStringUTFChars(mainFileContent_, 0);
+    JX_DefineMainFile(mainFileContent);
+    env->ReleaseStringUTFChars(mainFileContent_, mainFileContent);
+}
+
+JNIEXPORT void JNICALL
+Java_io_jxcore_node_JXCore_loopOnce(JNIEnv *env, jobject thiz) {
+    JX_LoopOnce();
 }
 
 }
