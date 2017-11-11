@@ -43,9 +43,9 @@ public final class JXCore {
         mLoopHandler = new Handler(context.getMainLooper());
     }
 
-    public void start() throws Exception {
-        final HashMap assets = getAssetsFilesTree();
-        final String assetsAsString = new JSONObject(assets).toString();
+    public void initialize() throws IOException {
+        final HashMap assetsFilesTree = getAssetsFilesTree();
+        final String assetsAsString = new JSONObject(assetsFilesTree).toString();
         final String assetsAbsolutePath = mHomePath + '/' + mAssetsPath;
         initializeEngine(mAssetManager, assetsAbsolutePath, assetsAsString);
         final String mainFileContent = "process.setPaths = function(){ process.cwd = function() { return '"
@@ -55,10 +55,10 @@ public final class JXCore {
                 + mHomePath
                 + "';\n"
                 + "};" + readAsset(mMainFileName);
-//                    final String mainFileContent = "process.cwd = function(){ return '" + assetsAbsolutePath + "'; };\n"
-//                            + "process.userPath = '" + assetsAbsolutePath + "';\n"
-//                            + readAsset(mMainFileName);
         defineMainFile(mainFileContent);
+    }
+
+    public void start() {
         startEngine();
         startEventLoop();
     }
