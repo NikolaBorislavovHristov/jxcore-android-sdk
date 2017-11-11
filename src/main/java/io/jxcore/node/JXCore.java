@@ -65,6 +65,7 @@ public final class JXCore {
 
     public void stop() {
         stopEngine();
+        mLoopHandler.removeCallbacks(mEventLoop);
     }
 
     private HashMap<String, Integer> getAssetsFilesTree() throws IOException {
