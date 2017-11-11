@@ -3,6 +3,7 @@ package io.jxcore.node;
 import android.content.Context;
 import android.content.res.AssetManager;
 import android.os.Handler;
+import android.os.HandlerThread;
 
 import org.json.JSONObject;
 
@@ -14,6 +15,7 @@ import java.util.HashMap;
 
 public final class JXCore {
 
+    private static final String TAG = JXCore.class.getSimpleName();
     private static final int EVENT_LOOP_TIMEOUT = 5;
     private static final String MAIN_FILE_FORMAT = "var CWD = '%s', USER_PATH = '%s';\n%s";
 
@@ -21,8 +23,8 @@ public final class JXCore {
         System.loadLibrary("jxcore");
     }
 
-    private boolean mIsRunning;
     private final Handler mEventLoopHandler;
+    private boolean mIsRunning = false;
     private final Runnable mEventLoop = new Runnable() {
         @Override
         public void run() {
@@ -32,8 +34,9 @@ public final class JXCore {
     };
 
     public JXCore(final Context context, final String assetsPath, final String mainFileName) throws IOException {
-        mIsRunning = false;
-        mEventLoopHandler = new Handler(context.getMainLooper());
+        final HandlerThread handlerThread = new HandlerThread(TAG);
+        handlerThread.start();
+        mEventLoopHandler = new Handler(handlerThread.getLooper());
         final AssetManager assetManager = context.getAssets();
         final HashMap assetsFilesTree = getAssetsFilesTree(assetManager, assetsPath);
         final String assetsAsString = new JSONObject(assetsFilesTree).toString();
@@ -41,17 +44,32 @@ public final class JXCore {
         final String assetsAbsolutePath = homePath + '/' + assetsPath;
         final String mainFileAsset = readAsset(assetManager, assetsPath + "/" + mainFileName);
         final String mainFileContent = String.format(MAIN_FILE_FORMAT, assetsAbsolutePath, homePath, mainFileAsset);
-        initializeEngine(assetManager, assetsAbsolutePath, assetsAsString, mainFileContent);
+        mEventLoopHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                JXCore.this.initializeEngine(assetManager, assetsAbsolutePath, assetsAsString, mainFileContent);
+            }
+        });
     }
 
     public void start() {
-        startEngine();
-        resume();
+        mEventLoopHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                JXCore.this.startEngine();
+                JXCore.this.resume();
+            }
+        });
     }
 
     public void stop() {
-        pause();
-        stopEngine();
+        mEventLoopHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                JXCore.this.pause();
+                JXCore.this.stopEngine();
+            }
+        });
     }
 
     public void resume() {
