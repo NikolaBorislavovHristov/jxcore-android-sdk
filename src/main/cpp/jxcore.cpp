@@ -5,8 +5,9 @@
 #include "android/asset_manager_jni.h"
 #include "../../../jxcore-binaries/jx.h"
 
-#define LOG_TAG "JXCore"
-#define LOGD(...) __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, __VA_ARGS__)
+#ifndef LOGD
+#define LOGD(...) __android_log_print(ANDROID_LOG_DEBUG, "JXCore", __VA_ARGS__)
+#endif
 
 extern "C" {
 
