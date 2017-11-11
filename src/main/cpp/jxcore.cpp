@@ -42,8 +42,8 @@ void assetReadSync(JXValue *argv, int argc) {
     free(filename);
 }
 
-void assetReadDirSync(JXValue *results, int argc) {
-    JX_SetJSON(&results[argc], mAssetsFilesTree.c_str(), mAssetsFilesTree.length());
+void assetReadDirSync(JXValue *argv, int argc) {
+    JX_SetJSON(&argv[argc], mAssetsFilesTree.c_str(), mAssetsFilesTree.length());
 }
 
 JNIEXPORT void JNICALL
