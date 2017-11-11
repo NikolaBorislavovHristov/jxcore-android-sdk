@@ -1,4 +1,3 @@
-#include <jni.h>
 #include <string>
 #include <android/log.h>
 #include "android/asset_manager.h"
