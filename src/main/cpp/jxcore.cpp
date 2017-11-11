@@ -14,16 +14,15 @@ extern "C" {
 AAssetManager *mAssetManager;
 std::string mAssetsFilesTree;
 
-void assetExistsSync(JXValue *results, int argc) {
-    char *filename = JX_GetString(&results[0]);
+void assetExistsSync(JXValue *argv, int argc) {
+    char *filename = JX_GetString(&argv[0]);
     AAsset *asset = AAssetManager_open(mAssetManager, filename, AASSET_MODE_UNKNOWN);
-    bool found = asset != NULL;
-    if (found) {
+    bool exists = asset != NULL;
+    JX_SetBoolean(&argv[argc], exists);
+    free(filename);
+    if (exists) {
         AAsset_close(asset);
     }
-
-    JX_SetBoolean(&results[argc], found);
-    free(filename);
 }
 
 void assetReadSync(JXValue *results, int argc) {
