@@ -24,19 +24,19 @@ void assetExistsSync(JXValue *argv, int argc) {
     }
 }
 
-void assetReadSync(JXValue *results, int argc) {
-    char *filename = JX_GetString(&results[0]);
+void assetReadSync(JXValue *argv, int argc) {
+    char *filename = JX_GetString(&argv[0]);
     AAsset *asset = AAssetManager_open(mAssetManager, filename, AASSET_MODE_UNKNOWN);
-    if (asset == NULL) {
-        const char *err = "File does not exist";
-        JX_SetError(&results[argc], err, strlen(err));
-    } else {
+    if (asset != NULL) {
         off_t assetSize = AAsset_getLength(asset);
         char *assetBuffer = (char*) malloc(sizeof(char)*assetSize);
         int readLength = AAsset_read(asset, assetBuffer, assetSize);
-        JX_SetBuffer(&results[argc], assetBuffer, readLength);
+        JX_SetBuffer(&argv[argc], assetBuffer, readLength);
         AAsset_close(asset);
         free(assetBuffer);
+    } else {
+        const char *err = "File does not exist";
+        JX_SetError(&argv[argc], err, strlen(err));
     }
 
     free(filename);
