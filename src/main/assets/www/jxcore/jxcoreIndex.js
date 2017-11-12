@@ -212,8 +212,8 @@ var extendFS = function () {
     process.binding('natives').fs += "(" + process.registerAssets.toString() + ")(exports);";
 };
 
-process.registerAssets();
 process.setPaths();
+process.registerAssets();
 extendFS();
 
 jxcore.tasks.register(process.registerAssets);
