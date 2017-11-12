@@ -3,6 +3,7 @@
 #### Start Node.js server on Android in a background service.
 #### This project use jxcore v3.1.14 compiled with SpiderMonkey. If you want to use V8 instead replace the content of the `jxcore-binaries` directory with the compiled binaries.
 #### Compiled JXCore binaries used from [thaliproject/jxbuild](https://github.com/thaliproject/jxbuild/blob/master/distribute.md)
+#### [Example project](https://github.com/NikolaBorislavovHristov/jxcore-service-example)
 
 ### How to:
 
