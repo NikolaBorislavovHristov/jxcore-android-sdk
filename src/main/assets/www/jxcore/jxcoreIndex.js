@@ -1,6 +1,6 @@
 process.setPaths = function () {
     process.cwd = function () {
-        return HOME_PATH + '/' + ASSET_PATH;
+        return HOME_PATH + '/' + ASSETS_PATH;
     };
 
     process.userPath = HOME_PATH;
