@@ -19,7 +19,7 @@ allprojects {
 2. Add the JXCore SDK dependency
 ```gradle
 dependencies {
-    implementation 'com.github.NikolaBorislavovHristov:jxcore-android-sdk:v1.0.1'
+    implementation 'com.github.NikolaBorislavovHristov:jxcore-android-sdk:master-SNAPSHOT'
 }
 ```
 
