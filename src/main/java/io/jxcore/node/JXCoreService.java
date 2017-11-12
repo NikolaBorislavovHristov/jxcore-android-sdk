@@ -15,7 +15,7 @@ public final class JXCoreService extends Service {
     public void onCreate() {
         super.onCreate();
         try {
-            final JXCore jxCoreClient = new JXCore(getApplicationContext());
+            final JXCore jxCoreClient = new JXCore(this);
             jxCoreClient.start();
         } catch (final IOException e) {
             Log.e(TAG, "JXCore service not started", e);
