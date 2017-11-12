@@ -19,6 +19,7 @@ public final class JXCore {
     private static final int EVENT_LOOP_TIMEOUT = 5;
     private static final String ASSETS_PATH = "www/jxcore";
     private static final String INDEX_FILE = "jxcoreIndex.js";
+    private static final String DEFAULT_MAIN_FILE_NAME = "server.js";
     private static final String MAIN_FILE_FORMAT = "var HOME_PATH = '%s', ASSETS_PATH = '%s', MAIN_FILE = '%s';\n%s";
 
     static {
@@ -34,6 +35,10 @@ public final class JXCore {
             mEventLoopHandler.postDelayed(mEventLoop, EVENT_LOOP_TIMEOUT);
         }
     };
+
+    public JXCore(final Context context) throws IOException {
+        this(context, DEFAULT_MAIN_FILE_NAME);
+    }
 
     public JXCore(final Context context, final String mainFileName) throws IOException {
         final HandlerThread eventLoopThread = new HandlerThread(TAG);
